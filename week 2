@@ -1,0 +1,223 @@
+변경 후
+import pygame
+import random
+import math
+
+pygame.init()
+
+WIDTH, HEIGHT = 900, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Fancy Particle Playground")
+
+clock = pygame.time.Clock()
+
+particles = []
+
+class Particle:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+        angle = random.uniform(0, math.pi * 2)
+        speed = random.uniform(1, 6)
+
+        self.vx = math.cos(angle) * speed
+        self.vy = math.sin(angle) * speed
+
+        self.life = random.randint(40, 80)
+        self.size = random.randint(3, 7)
+
+        self.color = (
+            random.randint(150,255),
+            random.randint(100,255),
+            random.randint(150,255)
+        )
+
+    def update(self):
+        self.x += self.vx
+        self.y += self.vy
+
+        self.vy += 0.08
+        self.life -= 1
+
+    def draw(self, surf):
+        if self.life > 0:
+            pygame.draw.circle(
+                surf,
+                self.color,
+                (int(self.x), int(self.y)),
+                self.size
+            )
+
+    def alive(self):
+        return self.life > 0
+
+
+def draw_background(surface, t):
+    for y in range(HEIGHT):
+        c = int(40 + 30 * math.sin(y * 0.01 + t))
+        color = (10, c, 50 + c//2)
+        pygame.draw.line(surface, color, (0, y), (WIDTH, y))
+
+
+running = True
+time = 0
+
+while running:
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    mouse = pygame.mouse.get_pos()
+    buttons = pygame.mouse.get_pressed()
+
+    if buttons[0]:
+        for _ in range(8):
+            particles.append(Particle(mouse[0], mouse[1]))
+
+    time += 0.03
+
+    draw_background(screen, time)
+
+    for p in particles:
+        p.update()
+        p.draw(screen)
+
+    particles = [p for p in particles if p.alive()]
+
+    pygame.display.flip()
+    clock.tick(60)
+
+pygame.quit()
+
+
+
+
+
+
+
+
+
+Q:어떤 부분을 수정한거?
+
+A: 1.particle 클래스 변경
+ self.life = random.randint(40, 80) --> self.life = random.randint(50, 100) self.max_life = self.life
+이유: 페이드 계산하려고
+
+2.draw 함수 완전 업그레이드
+기존
+pygame.draw.circle(
+    surf,
+    self.color,
+    (int(self.x), int(self.y)),
+    self.size
+)
+  
+수정
+
+fade = self.life / self.max_life   
+
+radius = int(self.size * fade)    
+
+color = (
+    int(self.color[0] * fade),    
+    int(self.color[1] * fade),
+    int(self.color[2] * fade)
+)
+
+pygame.draw.circle(
+    surf,
+    color,
+    (int(self.x), int(self.y)),
+    max(1, radius)
+)
+핵심변화: 크기 줄임, 색 연하게, 자연스럽게 사라짐
+
+3.물리값 살짝 변경
+기존                  
+speed = random.uniform(1, 6)
+self.vy += 0.08                      
+
+수정
+
+speed = random.uniform(2, 7)
+self.vy += 0.1
+:더 역동적으로 바뀜
+
+4.트레일 효과 함수 추가(새 기능)
+신규 추가
+
+def draw_trail(surface):
+    fade_surface = pygame.Surface((WIDTH, HEIGHT))
+    fade_surface.set_alpha(40)
+    fade_surface.fill((0, 0, 0))
+    surface.blit(fade_surface, (0, 0))
+
+5.메인 루프에 추가
+기존
+draw_background(screen, time)
+
+수정
+draw_background(screen, time)
+draw_trail(screen)  
+
+6.배경 색감 변경
+기존
+c = int(40 + 30 * math.sin(y * 0.01 + t))
+color = (10, c, 50 + c//2)
+
+수정
+c = int(60 + 40 * math.sin(y * 0.01 + t))
+color = (20, c, 80 + c // 2)
+
+:더 밝고 깊은 색
+
+7.파티클 생성량 증가
+기존
+for _ in range(8):
+
+수정
+for _ in range(10):
+
+:더 풍성해 보이게
+
+
+
+
+Q:fade = self.life / self.max_life 이 코드에서 max에 역할이 뭐야?
+
+A:max_life의 역할 
+
+여기서 max_life는 처음 상태(100%)를 기준으로 만들어주는 값이야 
+쉽게 말하면 self_life--> 지금 남은 시간  self max_life--> 처음 시작 시간(최대값)
+그래서 현재 상태 ÷ 처음 상태 = 비율 임
+
+
+Q: 근데 왜 max가 처음 시작 시간임?
+
+A:왜 max_life = 처음 시작 시간인가? max는 “최대값(maximum)”이라는 뜻
+self.life = random.randint(50, 100)
+self.max_life = self.life                  이 순간: 생성될 때 life가 가장 큼 (= 최대값)
+즉: 처음 값 = 가장 큰 값 = max
+
+그 다음은? self.life -= 1 : 계속 줄어듦 그래서 상태는 이렇게 변함 처음: life = 100 (최대) 중간: life = 50
+끝: life = 0
+
+래서 이름이 max_life인 이유
+
+ “이 파티클이 가질 수 있는 최대 life 값을 저장한 것” 즉:max_life = 처음 값 (가장 컸던 값)
+
+
+
+시행착오:max 부분이 이해가 안가서 다시 질문
+해결과정: 여러번 질문을 하고 대답을 여러번 보면서 이해함
+
+배운점:그냥 ai에게 딸깍하고 끝내는것이 아니라 이해가 안되는 부분은 이해하고 가는게 나중에 가서 덜 고생한다 라는 것을 느꼈다.
+
+
+
+
+
+
+
