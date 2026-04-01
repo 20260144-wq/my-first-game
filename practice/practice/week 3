@@ -1,0 +1,106 @@
+import pygame
+import sys
+
+pygame.init()
+
+screen = pygame.display.set_mode((800, 600))
+pygame.display.set_caption("My First Pygame")
+
+WHITE = (255, 255, 255)
+BLUE = (0, 0, 255)
+
+clock = pygame.time.Clock()
+running = True
+
+# 🔥 원의 위치 변수 (처음에는 가운데)
+x = 400
+y = 300
+
+while running:
+    # 이벤트 처리
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # 🔥 키 입력 처리 (방향키)
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        x -= 10   # 왼쪽
+    if keys[pygame.K_RIGHT]:
+        x += 10   # 오른쪽
+    if keys[pygame.K_UP]:
+        y -= 10   # 위
+    if keys[pygame.K_DOWN]:
+        y += 10   # 아래
+
+    # 화면 초기화
+    screen.fill(WHITE)
+
+    # 🔥 바뀐 위치로 원 그리기
+    pygame.draw.circle(screen, BLUE, (x, y), 50)
+
+    # 화면 업데이트
+    pygame.display.flip()
+
+    # FPS 설정
+    clock.tick(60)
+
+pygame.quit()
+sys.exit()
+
+
+
+# Week 3 실습 기록
+
+## 목표
+플레이어 캐릭터를 키보드로 움직이기 구현
+
+## AI 대화 기록 
+
+1Q: 전체 코드에서 for event in pygame.event.get():
+    if event.type == pygame.QUIT:
+        running = False 이 부분을 설명해줘
+
+A: 1. pygame.event.get()
+이벤트 즉 사용자 행동을 가져오는 함수: 키보드 입력, 마우스 클릭, 창 닫기 버튼 클릭
+
+2. for event in ...
+발생한 이벤트들을 하나씩 확인{이벤트가 여러 개일 수 있어서 반복문 사용
+
+3. event.type
+이벤트 종류
+
+4. 핵심 부분
+if event.type == pygame.QUIT:
+    running = False  
+창 닫기 버튼 누르면 게임 종료해라
+
+한 줄 요약: 창 닫기 버튼 눌렀을 때 게임을 종료시키는 코드
+
+2Q:# FPS 설정 clock.tick(60) 에서 다른 숫자로 해도 상관없어? 만약에 바꾸면 어떻게 됨?
+
+A: 이게 하는 일:  초당 최대 프레임 수(FPS)를 제한하는 것 60 → 1초에 최대 60번 화면 업데이트
+숫자를 크게 바꾸면 (예:120) clock.tick(120)
+결과: 화면 더 부드러움, 움직임 더 빠르게 느껴짐, CPU 사용량 증가
+
+작게 바꾸면 (예:30) clock.tick(30)
+결과:화면 끊겨 보일 수 있음, 움직임 느려짐, cpu 부담 줄어듧
+
+중요한 포인트: 지금 코드에서는 x += 10 <-- 이게 프레임마다 실행됨 그래서 FPS가 높으면 더 자주 움직임 그래서 속도 빨라짐 FPS가 낮으면 덜 움직임 그래서 속도 느려짐 
+한 줄 정리:FPS 바꾸면 게임 속도 자체가 바뀐다
+
+3Q:running = True 이건 뭔뜻임?
+
+A: 뜻: True: 계속 실행 False: 종료
+어디에 쓰이냐 while running <-- 이 의미는 running이 True인 동안 계속 반복해라 라는 의미
+언제 Flase가 되냐 if event.type == pygame.QUIT: running = False
+창 닫기 버튼 누르면 1:running = False 2:while 종료 3:게임 끝
+한 줄 요약: 게임 계속 돌릴지 멈출지 결정하는 변수
+
+
+시행착오: 파이썬을 해보았지만 그렇게 자세하게 해보진 않아서 그나마 이해되는 개념은 있지만 몇몇 문장이 이해가 되지않아 실습하는데 좀 힘들었음
+
+최종 해결: 이해가 될떄 까지 AI한테 물어보면서 직접 코드를 수정하거나 작성해서 이해가 됨
+
+
+
